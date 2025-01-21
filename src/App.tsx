@@ -1,40 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { TitleFlex } from '@/components/TitleFlex.tsx';
-import {
-  VITE_API_TOKEN,
-  VITE_APP_TITLE,
-  VITE_APP_VERSION,
-} from '@/utils/const/env.ts';
+import { CompareBar } from '@/components/CompareBar.tsx';
+import { CompareTable } from '@/components/CompareTable.tsx';
+import { ProductGrid } from '@/components/ProductGrid.tsx';
 
 export const App: FC = () => {
-  const [timestamp, setTimestamp] = useState<number>(Date.now());
+  const [compareIds, setCompareIds] = useState<number[]>([]);
 
-  const dateString = useMemo<string>(
-    () =>
-      new Date(timestamp).toLocaleDateString() +
-      ' ' +
-      new Date(timestamp).toTimeString(),
-    [timestamp],
-  );
+  const addCompareId = useCallback((id: number) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id) || prev.length >= 3) {
+        return prev;
+      }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimestamp(Date.now());
-    }, 1000);
+      return [...prev, id];
+    });
+  }, []);
 
-    return () => clearInterval(interval);
+  const removeCompareId = useCallback((id: number) => {
+    setCompareIds((prev) => prev.filter((prevId) => prevId !== id));
+  }, []);
+
+  const clearCompareIds = useCallback(() => {
+    setCompareIds([]);
   }, []);
 
   return (
-    <>
-      <TitleFlex>
-        <h2>{VITE_APP_TITLE}</h2>
-        <span>{VITE_APP_VERSION}</span>
-      </TitleFlex>
-
-      <p>API TOKEN: {VITE_API_TOKEN}</p>
-      <p>{dateString}</p>
-    </>
+    <main
+      className={
+        'relative w-full h-[100vh] max-h-[100vh] flex flex-col items-center overflow-auto pb-[200px]'
+      }
+    >
+      <ProductGrid addCompareId={addCompareId} />
+      <hr className={'border-b w-full h-[1px]'} />
+      <CompareTable compareIds={compareIds} />
+      <CompareBar
+        compareIds={compareIds}
+        removeCompareId={removeCompareId}
+        clearCompareIds={clearCompareIds}
+      />
+    </main>
   );
 };
